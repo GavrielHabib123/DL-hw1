@@ -155,7 +155,7 @@ regularization_lenet = LenetOverFashionMnist(dropout=False,l2=False,bn=False,
                                     regularization=True,name='With Regularization')
 
 lenet_models = [basic_lenet,dropout_lenet,l2_lenet,
-                bn_lenet,regularization_lenet]
+                regularization_lenet,bn_lenet]
 
 for model in lenet_models:
     model.load_data()
