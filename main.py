@@ -7,6 +7,7 @@ from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
 from keras import regularizers
 from keras.layers.core import Flatten
+from keras.layers import InputLayer
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.utils import np_utils
@@ -48,6 +49,8 @@ class LenetOverFashionMnist:
 
         self.model = Sequential()
 
+        self.model.add(InputLayer(input_shape=(28, 28, 1)))
+
         if self.bn_flag:
             self.model.add(BatchNormalization())
 
@@ -55,8 +58,7 @@ class LenetOverFashionMnist:
         self.model.add(Convolution2D(
             filters=32,
             kernel_size=(2, 2),
-            padding="same",
-            input_shape=(28, 28, 1)))
+            padding="same"))
 
         if self.dropout_flag:
             self.model.add(Dropout(rate=0.25))
@@ -76,9 +78,6 @@ class LenetOverFashionMnist:
             kernel_size=(2, 2),
             padding="same"))
 
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
-
         # Add a ReLU activation function
         self.model.add(Activation(
             activation="relu"))
@@ -97,14 +96,8 @@ class LenetOverFashionMnist:
         else:
             self.model.add(Dense(128, activation='relu'))
 
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
-
         # Add a fully-connected output layer
         self.model.add(Dense(10, activation='softmax'))
-
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
 
         # Compile the network
         self.model.compile(
