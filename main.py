@@ -41,6 +41,10 @@ class LenetOverFashionMnist:
         self.train_labels = np_utils.to_categorical(self.train_labels, 10)
         self.test_labels = np_utils.to_categorical(self.test_labels, 10)
 
+        # self.train_data = self.train_data[0:100,:,:,:]
+        # self.train_labels = self.train_labels[0:100, :]
+        # self.test_data = self.test_data[0:100, :, :, :]
+        # self.test_labels = self.test_labels[0:100, :]
     def build_model(self):
         Loss = "categorical_crossentropy"
         if self.l2_flag:
@@ -48,8 +52,6 @@ class LenetOverFashionMnist:
 
         self.model = Sequential()
 
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
 
         # Add the first convolution layer
         self.model.add(Convolution2D(
@@ -57,6 +59,9 @@ class LenetOverFashionMnist:
             kernel_size=(2, 2),
             padding="same",
             input_shape=(28, 28, 1)))
+
+        if self.bn_flag:
+            self.model.add(BatchNormalization())
 
         if self.dropout_flag:
             self.model.add(Dropout(rate=0.25))
@@ -134,7 +139,8 @@ class LenetOverFashionMnist:
         # Print the model's accuracy
         print(accuracy)
 
-    def plot_graphs(self):
+    def plot_graphs(self, i):
+        plt.figure(i)
         plt.plot(self.model.history.history['acc'])
         plt.plot(self.model.history.history['val_acc'])
         plt.title('Model Accuracy ' + self.name)
@@ -154,8 +160,8 @@ bn_lenet = LenetOverFashionMnist(dropout=False,l2=False,bn=True,
 regularization_lenet = LenetOverFashionMnist(dropout=False,l2=False,bn=False,
                                     regularization=True,name='With Regularization')
 
-lenet_models = [basic_lenet,dropout_lenet,l2_lenet,
-                regularization_lenet,bn_lenet]
+lenet_models =[bn_lenet]# [basic_lenet,dropout_lenet,l2_lenet,
+               # regularization_lenet,bn_lenet]
 
 for model in lenet_models:
     model.load_data()
@@ -164,5 +170,7 @@ for model in lenet_models:
     model.train_model()
     model.evaluate_model()
 
+i = 0
 for model in lenet_models:
-    model.plot_graphs()
+    i = i+1
+    model.plot_graphs(i)
