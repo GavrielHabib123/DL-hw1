@@ -1,5 +1,4 @@
 from utils import mnist_reader
-from tensorflow.examples.tutorials.mnist import input_data
 from keras.layers.convolutional import Convolution2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.core import Activation
@@ -15,24 +14,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class LenetOverFashionMnist:
-    def __init__(self, dropout, l2, bn, regularization, name):
+    def __init__(self, dropout=False, weight_decay=False, bn=False, name=[]):
         self.dropout_flag = dropout
-        self.l2_flag = l2
+        if weight_decay:
+            self.regularizer = regularizers.l2(0.01)
+        else:
+            self.regularizer = None
         self.bn_flag = bn
-        self.regularization_flag = regularization
         self.name = name
 
-
     def load_data(self):
-        data = input_data.read_data_sets('data/fashion')
-
         train_data_raw, self.train_labels = mnist_reader.load_mnist('data/fashion', kind='train')
         test_data_raw, self.test_labels = mnist_reader.load_mnist('data/fashion', kind='t10k')
 
         train_data_raw = train_data_raw.reshape((train_data_raw.shape[0], int(np.sqrt(train_data_raw.shape[1])),
                                                  int(np.sqrt(train_data_raw.shape[1]))))
         test_data_raw = test_data_raw.reshape((test_data_raw.shape[0], int(np.sqrt(test_data_raw.shape[1])),
-                                               int(np.sqrt(test_data_raw.shape[1]))))
+                                           int(np.sqrt(test_data_raw.shape[1]))))
         train_data_raw = train_data_raw[:, :, :, np.newaxis]
         test_data_raw = test_data_raw[:, :, :, np.newaxis]
 
@@ -42,14 +40,8 @@ class LenetOverFashionMnist:
         self.train_labels = np_utils.to_categorical(self.train_labels, 10)
         self.test_labels = np_utils.to_categorical(self.test_labels, 10)
 
-        # self.train_data = self.train_data[0:100,:,:,:]
-        # self.train_labels = self.train_labels[0:100, :]
-        # self.test_data = self.test_data[0:100, :, :, :]
-        # self.test_labels = self.test_labels[0:100, :]
     def build_model(self):
         loss = "categorical_crossentropy"
-        if self.l2_flag:
-            loss = "mean_squared_error"
 
         self.model = Sequential()
 
@@ -57,57 +49,49 @@ class LenetOverFashionMnist:
 
         # Add the first convolution layer
         self.model.add(Convolution2D(
-            filters=32,
-            kernel_size=(2, 2),
-            padding="same"))
+            filters=6,
+            kernel_size=(5,5),
+            padding="same",
+            kernel_regularizer=self.regularizer))
+
+        # # Add a ReLU activation function
+        self.model.add(Activation(activation="relu"))
+
+        # Add a pooling layer
+        self.model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+        if self.bn_flag:
+            self.model.add(BatchNormalization())
+
+        # Add the second convolution layer
+        self.model.add(Convolution2D(
+            filters=16,
+            kernel_size=(5, 5),
+            padding="same",
+            kernel_regularizer=self.regularizer))
 
         if self.dropout_flag:
             self.model.add(Dropout(rate=0.25))
 
-        # # Add a ReLU activation function
-        self.model.add(Activation(
-            activation="relu"))
-
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
-
-        # Add a pooling layer
-        self.model.add(MaxPooling2D(
-            pool_size=(2, 2),
-            strides=(2, 2)))
-
-        # Add the second convolution layer
-        self.model.add(Convolution2D(
-            filters=32,
-            kernel_size=(2, 2),
-            padding="same"))
-
         # Add a ReLU activation function
-        self.model.add(Activation(
-            activation="relu"))
-
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
+        self.model.add(Activation(activation="relu"))
 
         # Add a second pooling layer
-        self.model.add(MaxPooling2D(
-            pool_size=(2, 2),
-            strides=(2, 2)))
+        self.model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+        if self.bn_flag:
+            self.model.add(BatchNormalization())
 
         # Flatten the network
         self.model.add(Flatten())
 
         # Add a fully-connected hidden layer
-        if self.regularization_flag:
-            self.model.add(Dense(128, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-        else:
-            self.model.add(Dense(128, activation='relu'))
+        self.model.add(Dense(120, activation='relu', kernel_regularizer=self.regularizer))
 
-        if self.bn_flag:
-            self.model.add(BatchNormalization())
+        self.model.add(Dense(84, activation='relu', kernel_regularizer=self.regularizer))
 
         # Add a fully-connected output layer
-        self.model.add(Dense(10, activation='softmax'))
+        self.model.add(Dense(10, activation='softmax', kernel_regularizer=self.regularizer))
 
         # Compile the network
         self.model.compile(
@@ -148,35 +132,14 @@ class LenetOverFashionMnist:
         plt.show()
 
 
-basic_lenet = LenetOverFashionMnist(dropout=False,
-                                    l2=False,
-                                    bn=False,
-                                    regularization=False,
-                                    name='basic Lenet')
-dropout_lenet = LenetOverFashionMnist(dropout=True,
-                                      l2=False,
-                                      bn=False,
-                                      regularization=False,
-                                      name='With Dropout')
-l2_lenet = LenetOverFashionMnist(dropout=False,
-                                 l2=True,bn=False,
-                                 regularization=False,
-                                 name='With L2 loss')
-bn_lenet = LenetOverFashionMnist(dropout=False,
-                                 l2=False,
-                                 bn=True,
-                                 regularization=False,
-                                 name='With Batch norm')
-regularization_lenet = LenetOverFashionMnist(dropout=False,
-                                             l2=False,
-                                             bn=False,
-                                             regularization=True,
-                                             name='With Regularization')
+basic_lenet = LenetOverFashionMnist(name='basic Lenet')
+dropout_lenet = LenetOverFashionMnist(dropout=True, name='With Dropout')
+weight_decay_lenet = LenetOverFashionMnist(weight_decay=True, name='With L2 loss')
+bn_lenet = LenetOverFashionMnist(bn=True, name='With Batch norm')
 
 lenet_models = [basic_lenet,
                 dropout_lenet,
-                l2_lenet,
-                regularization_lenet,
+                weight_decay_lenet,
                 bn_lenet]
 
 for model in lenet_models:
