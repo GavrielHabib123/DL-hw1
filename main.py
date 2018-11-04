@@ -134,7 +134,7 @@ class LenetOverFashionMnist:
 
 basic_lenet = LenetOverFashionMnist(name='basic Lenet')
 dropout_lenet = LenetOverFashionMnist(dropout=True, name='With Dropout')
-weight_decay_lenet = LenetOverFashionMnist(weight_decay=True, name='With L2 loss')
+weight_decay_lenet = LenetOverFashionMnist(weight_decay=True, name='With weight decay')
 bn_lenet = LenetOverFashionMnist(bn=True, name='With Batch norm')
 
 lenet_models = [basic_lenet,
