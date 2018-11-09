@@ -18,7 +18,7 @@ class LenetOverFashionMnist:
     def __init__(self, dropout=False, weight_decay=False, bn=False, name=[]):
         self.dropout_flag = dropout
         if weight_decay:
-            self.regularizer = regularizers.l2(0.01)
+            self.regularizer = regularizers.l2(0.002)
         else:
             self.regularizer = None
         self.bn_flag = bn
