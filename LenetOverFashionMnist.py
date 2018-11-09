@@ -6,12 +6,13 @@ from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
 from keras import regularizers
 from keras.layers.core import Flatten
-from keras.layers import InputLayer
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.utils import np_utils
+from keras.models import load_model
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 class LenetOverFashionMnist:
     def __init__(self, dropout=False, weight_decay=False, bn=False, name=[]):
@@ -45,14 +46,14 @@ class LenetOverFashionMnist:
 
         self.model = Sequential()
 
-        self.model.add(InputLayer(input_shape=(28, 28, 1)))
-
         # Add the first convolution layer
         self.model.add(Convolution2D(
             filters=6,
             kernel_size=(5,5),
             padding="same",
+            input_shape=(28, 28, 1),
             kernel_regularizer=self.regularizer))
+
 
         # # Add a ReLU activation function
         self.model.add(Activation(activation="relu"))
@@ -112,14 +113,14 @@ class LenetOverFashionMnist:
             verbose=1)
 
     def evaluate_model(self):
-        (loss, accuracy) = self.model.evaluate(
+        (self.loss, self.accuracy) = self.model.evaluate(
             self.test_data,
             self.test_labels,
             batch_size=128,
             verbose=1)
 
         # Print the model's accuracy
-        print(accuracy)
+        print(self.accuracy)
 
     def plot_graphs(self, i):
         plt.figure(i)
@@ -131,25 +132,10 @@ class LenetOverFashionMnist:
         plt.legend(['train', 'test'])
         plt.show()
 
+    def save_model_and_weights(self):
+        self.model.save('./models/{0}_model.h5'.format(self.name))
+        print("Saved model to disk")
 
-basic_lenet = LenetOverFashionMnist(name='basic Lenet')
-dropout_lenet = LenetOverFashionMnist(dropout=True, name='With Dropout')
-weight_decay_lenet = LenetOverFashionMnist(weight_decay=True, name='With weight decay')
-bn_lenet = LenetOverFashionMnist(bn=True, name='With Batch norm')
-
-lenet_models = [basic_lenet,
-                dropout_lenet,
-                weight_decay_lenet,
-                bn_lenet]
-
-for model in lenet_models:
-    model.load_data()
-    model.build_model()
-    model.print_model()
-    model.train_model()
-    model.evaluate_model()
-
-i = 0
-for model in lenet_models:
-    i = i+1
-    model.plot_graphs(i)
+    def load_model_and_weights(self):
+        self.model = load_model('./models/{0}_model.h5'.format(self.name))
+        print("Loaded model from disk")
